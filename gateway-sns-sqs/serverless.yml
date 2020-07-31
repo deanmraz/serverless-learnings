@@ -1,0 +1,65 @@
+service: gateway-sns-sqs
+
+provider:
+  name: aws
+  runtime: nodejs12.x
+  logRetentionInDays: 14
+  timeout: 30
+  memorySize: 1024
+  iamRoleStatements:
+    - Effect: 'Allow'
+      Action:
+        - "SNS:Publish"
+      Resource:
+        - arn:aws:sns:us-west-2:< TODO account ID>:<TODO topic name>
+  environment:
+    SNS_TOPIC: arn:aws:sns:us-west-2:< TODO account ID>:<TODO topic name>
+
+functions:
+
+  sqs:
+    handler: app/sqs.default
+    reservedConcurrency: 10
+    timeout: 60
+    events:
+      - sqs:
+        arn: arn:aws:sqs:us-west-2:< TODO account ID>:<TODO sqs name>
+        batchSize: 1
+
+  create:
+    handler: app/create.default
+    events:
+      - http:
+          path: api/create
+          method: post
+          cors:
+            origin: '*'
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+              - code
+              - redirect
+            allowCredentials: false
+
+  read:
+    handler: app/read.default
+    events:
+      - http:
+          path: api/read
+          method: get
+          cors:
+            origin: '*'
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+              - code
+              - redirect
+            allowCredentials: false
